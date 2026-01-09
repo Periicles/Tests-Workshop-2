@@ -1,3 +1,5 @@
+import { Laboratory } from "../src/Laboratory.js";
+
 describe("Laboratory initialisation", () => {
   it("accepte une liste vide", () => {
     expect(() => new Laboratory([])).not.toThrow();
