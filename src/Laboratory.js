@@ -3,7 +3,7 @@ export class Laboratory {
     this.substances = substances;
   }
 
-  get quantity() {
-    return this.substances.length;
+  getQuantity(substance) {
+    return 0;
   }
 }
