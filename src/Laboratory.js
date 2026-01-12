@@ -21,7 +21,7 @@ export class Laboratory {
         "Le tableau ne peut pas contenir de substances en double"
       );
     }
-    
+
     // Validate reactions
     if (reactions === null || reactions === undefined) {
       throw new Error(
@@ -31,7 +31,7 @@ export class Laboratory {
     if (typeof reactions !== "object" || Array.isArray(reactions)) {
       throw new Error("Le paramètre reactions doit être un objet");
     }
-    
+
     // Validate reaction products and reactants
     for (const product in reactions) {
       if (!substances.includes(product)) {
@@ -39,14 +39,14 @@ export class Laboratory {
           `Le produit ${product} n'est pas dans la liste des substances`
         );
       }
-      
+
       const reactants = reactions[product];
       if (!Array.isArray(reactants)) {
         throw new Error(
           `Les réactifs pour ${product} doivent être un tableau`
         );
       }
-      
+
       for (const reactant of reactants) {
         if (!reactant.substance || !substances.includes(reactant.substance)) {
           throw new Error(
@@ -60,7 +60,7 @@ export class Laboratory {
         }
       }
     }
-    
+
     this.substances = substances;
     this.reactions = reactions;
     this.quantities = {};
@@ -144,7 +144,7 @@ export class Laboratory {
 
     this.quantities[substance] = quantity;
   }
-  
+
   addProduct(product, quantity) {
     if (product === null || product === undefined) {
       throw new Error(
@@ -169,7 +169,7 @@ export class Laboratory {
     if (typeof quantity !== "number" || isNaN(quantity)) {
       throw new Error("Le paramètre quantity doit être un nombre valide");
     }
-    
+
     // Check if we have enough reactants
     const reactants = this.reactions[product];
     for (const reactant of reactants) {
@@ -180,13 +180,59 @@ export class Laboratory {
         );
       }
     }
-    
+
     // Consume reactants
     for (const reactant of reactants) {
       this.quantities[reactant.substance] -= reactant.quantity * quantity;
     }
-    
+
     // Add product
     this.quantities[product] += quantity;
+  }
+
+  make(product, desiredQuantity) {
+    if (product === null || product === undefined) {
+      throw new Error(
+        "Le paramètre product ne peut pas être null ou undefined"
+      );
+    }
+    if (product === "") {
+      throw new Error(
+        "Le paramètre product ne peut pas être une chaîne vide"
+      );
+    }
+    if (!this.reactions[product]) {
+      throw new Error(
+        "Aucune réaction définie pour ce produit"
+      );
+    }
+    if (desiredQuantity === null || desiredQuantity === undefined) {
+      throw new Error(
+        "Le paramètre desiredQuantity ne peut pas être null ou undefined"
+      );
+    }
+    if (typeof desiredQuantity !== "number" || isNaN(desiredQuantity)) {
+      throw new Error("Le paramètre desiredQuantity doit être un nombre valide");
+    }
+
+    // Calculate maximum possible quantity based on available reactants
+    const reactants = this.reactions[product];
+    let maxPossible = desiredQuantity;
+
+    for (const reactant of reactants) {
+      const available = this.quantities[reactant.substance];
+      const possibleFromThisReactant = Math.floor(available / reactant.quantity);
+      maxPossible = Math.min(maxPossible, possibleFromThisReactant);
+    }
+
+    // Produce the maximum possible quantity
+    if (maxPossible > 0) {
+      for (const reactant of reactants) {
+        this.quantities[reactant.substance] -= reactant.quantity * maxPossible;
+      }
+      this.quantities[product] += maxPossible;
+    }
+
+    return maxPossible;
   }
 }
