@@ -206,3 +206,151 @@ describe("Gestion des produits avec réactions", () => {
     expect(() => lab.addProduct("H2O", 1)).toThrow();
   });
 });
+
+describe("Méthode make - production optimale", () => {
+  it("produit la quantité demandée si suffisamment de réactifs", () => {
+    const reactions = {
+      H2O: [
+        { substance: "H2", quantity: 2 },
+        { substance: "O2", quantity: 1 },
+      ],
+    };
+    const lab = new Laboratory(["H2O", "H2", "O2"], reactions);
+    lab.setQuantity("H2", 10);
+    lab.setQuantity("O2", 5);
+    
+    const produced = lab.make("H2O", 3);
+    
+    expect(produced).toBe(3);
+    expect(lab.getQuantity("H2O")).toBe(3);
+    expect(lab.getQuantity("H2")).toBe(4);
+    expect(lab.getQuantity("O2")).toBe(2);
+  });
+
+  it("produit le maximum possible si pas assez de réactifs", () => {
+    const reactions = {
+      H2O: [
+        { substance: "H2", quantity: 2 },
+        { substance: "O2", quantity: 1 },
+      ],
+    };
+    const lab = new Laboratory(["H2O", "H2", "O2"], reactions);
+    lab.setQuantity("H2", 5);
+    lab.setQuantity("O2", 5);
+    
+    const produced = lab.make("H2O", 10);
+    
+    expect(produced).toBe(2);
+    expect(lab.getQuantity("H2O")).toBe(2);
+    expect(lab.getQuantity("H2")).toBe(1);
+    expect(lab.getQuantity("O2")).toBe(3);
+  });
+
+  it("retourne 0 si aucun réactif disponible", () => {
+    const reactions = {
+      H2O: [
+        { substance: "H2", quantity: 2 },
+        { substance: "O2", quantity: 1 },
+      ],
+    };
+    const lab = new Laboratory(["H2O", "H2", "O2"], reactions);
+    lab.setQuantity("H2", 0);
+    lab.setQuantity("O2", 0);
+    
+    const produced = lab.make("H2O", 5);
+    
+    expect(produced).toBe(0);
+    expect(lab.getQuantity("H2O")).toBe(0);
+  });
+
+  it("calcule correctement avec plusieurs réactifs limitants", () => {
+    const reactions = {
+      H2O: [
+        { substance: "H2", quantity: 2 },
+        { substance: "O2", quantity: 1 },
+      ],
+    };
+    const lab = new Laboratory(["H2O", "H2", "O2"], reactions);
+    lab.setQuantity("H2", 7);
+    lab.setQuantity("O2", 2);
+    
+    const produced = lab.make("H2O", 10);
+    
+    expect(produced).toBe(2);
+    expect(lab.getQuantity("H2")).toBe(3);
+    expect(lab.getQuantity("O2")).toBe(0);
+  });
+
+  it("rejette un produit sans réaction définie", () => {
+    const lab = new Laboratory(["H2O", "H2"], {});
+    expect(() => lab.make("H2O", 1)).toThrow();
+  });
+
+  it("gère les quantités décimales", () => {
+    const reactions = {
+      H2O: [
+        { substance: "H2", quantity: 2.5 },
+        { substance: "O2", quantity: 1 },
+      ],
+    };
+    const lab = new Laboratory(["H2O", "H2", "O2"], reactions);
+    lab.setQuantity("H2", 10);
+    lab.setQuantity("O2", 3);
+    
+    const produced = lab.make("H2O", 5);
+    
+    expect(produced).toBe(3);
+    expect(lab.getQuantity("H2O")).toBe(3);
+    expect(lab.getQuantity("H2")).toBe(2.5);
+    expect(lab.getQuantity("O2")).toBe(0);
+  });
+});
+
+describe("Réactions utilisant des produits comme réactifs", () => {
+  it("permet d'utiliser un produit comme réactif pour une autre réaction", () => {
+    const reactions = {
+      H2O: [
+        { substance: "H2", quantity: 2 },
+        { substance: "O2", quantity: 1 },
+      ],
+      H2O2: [
+        { substance: "H2O", quantity: 1 },
+        { substance: "O2", quantity: 1 },
+      ],
+    };
+    const lab = new Laboratory(["H2O", "H2O2", "H2", "O2"], reactions);
+    lab.setQuantity("H2", 10);
+    lab.setQuantity("O2", 10);
+    
+    lab.make("H2O", 3);
+    const produced = lab.make("H2O2", 2);
+    
+    expect(produced).toBe(2);
+    expect(lab.getQuantity("H2O")).toBe(1);
+    expect(lab.getQuantity("H2O2")).toBe(2);
+    expect(lab.getQuantity("O2")).toBe(5);
+  });
+
+  it("calcule correctement la production maximale avec des produits intermédiaires", () => {
+    const reactions = {
+      H2O: [
+        { substance: "H2", quantity: 2 },
+        { substance: "O2", quantity: 1 },
+      ],
+      H2O2: [
+        { substance: "H2O", quantity: 2 },
+        { substance: "O2", quantity: 1 },
+      ],
+    };
+    const lab = new Laboratory(["H2O", "H2O2", "H2", "O2"], reactions);
+    lab.setQuantity("H2", 20);
+    lab.setQuantity("O2", 20);
+    
+    lab.make("H2O", 5);
+    const produced = lab.make("H2O2", 10);
+    
+    expect(produced).toBe(2);
+    expect(lab.getQuantity("H2O")).toBe(1);
+    expect(lab.getQuantity("H2O2")).toBe(2);
+  });
+});
