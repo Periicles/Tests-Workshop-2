@@ -19,6 +19,15 @@ export class Laboratory {
   }
 
   getQuantity(substance) {
+    if (substance === null || substance === undefined) {
+      throw new Error("Le paramètre substance ne peut pas être null ou undefined");
+    }
+    if (substance === "") {
+      throw new Error("Le paramètre substance ne peut pas être une chaîne vide");
+    }
+    if (!this.substances.includes(substance)) {
+      throw new Error("La substance n'est pas dans la liste des substances connues");
+    }
     return 0;
   }
 }
