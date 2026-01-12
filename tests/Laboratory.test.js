@@ -41,3 +41,25 @@ describe("Laboratory initialisation - cas d'erreur", () => {
     expect(() => new Laboratory(["H2O", "NaCl", "H2O"])).toThrow();
   });
 });
+
+describe("getQuantity - cas d'erreur", () => {
+  it("rejette une substance qui n'est pas dans la liste", () => {
+    const lab = new Laboratory(["H2O", "NaCl"]);
+    expect(() => lab.getQuantity("CO2")).toThrow();
+  });
+
+  it("rejette null comme paramètre", () => {
+    const lab = new Laboratory(["H2O", "NaCl"]);
+    expect(() => lab.getQuantity(null)).toThrow();
+  });
+
+  it("rejette undefined comme paramètre", () => {
+    const lab = new Laboratory(["H2O", "NaCl"]);
+    expect(() => lab.getQuantity(undefined)).toThrow();
+  });
+
+  it("rejette une chaîne vide comme paramètre", () => {
+    const lab = new Laboratory(["H2O", "NaCl"]);
+    expect(() => lab.getQuantity("")).toThrow();
+  });
+});
