@@ -161,9 +161,9 @@ describe("Gestion des produits avec réactions", () => {
     const lab = new Laboratory(["H2O", "H2", "O2"], reactions);
     lab.setQuantity("H2", 10);
     lab.setQuantity("O2", 5);
-    
+
     lab.addProduct("H2O", 1);
-    
+
     expect(lab.getQuantity("H2O")).toBe(1);
     expect(lab.getQuantity("H2")).toBe(8);
     expect(lab.getQuantity("O2")).toBe(4);
@@ -179,9 +179,9 @@ describe("Gestion des produits avec réactions", () => {
     const lab = new Laboratory(["H2O", "H2", "O2"], reactions);
     lab.setQuantity("H2", 10);
     lab.setQuantity("O2", 5);
-    
+
     lab.addProduct("H2O", 2);
-    
+
     expect(lab.getQuantity("H2O")).toBe(2);
     expect(lab.getQuantity("H2")).toBe(6);
     expect(lab.getQuantity("O2")).toBe(3);
@@ -202,7 +202,7 @@ describe("Gestion des produits avec réactions", () => {
     const lab = new Laboratory(["H2O", "H2", "O2"], reactions);
     lab.setQuantity("H2", 1);
     lab.setQuantity("O2", 5);
-    
+
     expect(() => lab.addProduct("H2O", 1)).toThrow();
   });
 });
@@ -218,9 +218,9 @@ describe("Méthode make - production optimale", () => {
     const lab = new Laboratory(["H2O", "H2", "O2"], reactions);
     lab.setQuantity("H2", 10);
     lab.setQuantity("O2", 5);
-    
+
     const produced = lab.make("H2O", 3);
-    
+
     expect(produced).toBe(3);
     expect(lab.getQuantity("H2O")).toBe(3);
     expect(lab.getQuantity("H2")).toBe(4);
@@ -237,9 +237,9 @@ describe("Méthode make - production optimale", () => {
     const lab = new Laboratory(["H2O", "H2", "O2"], reactions);
     lab.setQuantity("H2", 5);
     lab.setQuantity("O2", 5);
-    
+
     const produced = lab.make("H2O", 10);
-    
+
     expect(produced).toBe(2);
     expect(lab.getQuantity("H2O")).toBe(2);
     expect(lab.getQuantity("H2")).toBe(1);
@@ -256,9 +256,9 @@ describe("Méthode make - production optimale", () => {
     const lab = new Laboratory(["H2O", "H2", "O2"], reactions);
     lab.setQuantity("H2", 0);
     lab.setQuantity("O2", 0);
-    
+
     const produced = lab.make("H2O", 5);
-    
+
     expect(produced).toBe(0);
     expect(lab.getQuantity("H2O")).toBe(0);
   });
@@ -273,9 +273,9 @@ describe("Méthode make - production optimale", () => {
     const lab = new Laboratory(["H2O", "H2", "O2"], reactions);
     lab.setQuantity("H2", 7);
     lab.setQuantity("O2", 2);
-    
+
     const produced = lab.make("H2O", 10);
-    
+
     expect(produced).toBe(2);
     expect(lab.getQuantity("H2")).toBe(3);
     expect(lab.getQuantity("O2")).toBe(0);
@@ -296,9 +296,9 @@ describe("Méthode make - production optimale", () => {
     const lab = new Laboratory(["H2O", "H2", "O2"], reactions);
     lab.setQuantity("H2", 10);
     lab.setQuantity("O2", 3);
-    
+
     const produced = lab.make("H2O", 5);
-    
+
     expect(produced).toBe(3);
     expect(lab.getQuantity("H2O")).toBe(3);
     expect(lab.getQuantity("H2")).toBe(2.5);
@@ -321,10 +321,10 @@ describe("Réactions utilisant des produits comme réactifs", () => {
     const lab = new Laboratory(["H2O", "H2O2", "H2", "O2"], reactions);
     lab.setQuantity("H2", 10);
     lab.setQuantity("O2", 10);
-    
+
     lab.make("H2O", 3);
     const produced = lab.make("H2O2", 2);
-    
+
     expect(produced).toBe(2);
     expect(lab.getQuantity("H2O")).toBe(1);
     expect(lab.getQuantity("H2O2")).toBe(2);
@@ -345,12 +345,119 @@ describe("Réactions utilisant des produits comme réactifs", () => {
     const lab = new Laboratory(["H2O", "H2O2", "H2", "O2"], reactions);
     lab.setQuantity("H2", 20);
     lab.setQuantity("O2", 20);
-    
+
     lab.make("H2O", 5);
     const produced = lab.make("H2O2", 10);
-    
+
     expect(produced).toBe(2);
     expect(lab.getQuantity("H2O")).toBe(1);
     expect(lab.getQuantity("H2O2")).toBe(2);
+  });
+});
+
+describe("Réactions circulaires", () => {
+  it("détecte et gère une référence circulaire simple", () => {
+    const reactions = {
+      A: [
+        { substance: "B", quantity: 1 },
+        { substance: "C", quantity: 1 },
+      ],
+      C: [
+        { substance: "A", quantity: 0.2 },
+        { substance: "D", quantity: 1 },
+      ],
+    };
+    const lab = new Laboratory(["A", "B", "C", "D"], reactions);
+    lab.setQuantity("B", 10);
+    lab.setQuantity("D", 10);
+    lab.setQuantity("A", 2);
+
+    // Pour produire 1 A net, on a besoin de:
+    // - 1 B (direct)
+    // - 1 C (direct)
+    // Pour produire 1 C on a besoin de:
+    // - 0.2 A (qui peut venir du stock existant)
+    // - 1 D
+    const produced = lab.make("A", 5);
+
+    // Devrait pouvoir produire plusieurs A en utilisant le stock et les réactions circulaires
+    expect(produced).toBeGreaterThan(0);
+    expect(lab.getQuantity("A")).toBeGreaterThan(2);
+  });
+
+  it("gère correctement les quantités avec référence circulaire", () => {
+    const reactions = {
+      A: [
+        { substance: "B", quantity: 1 },
+        { substance: "C", quantity: 1 },
+      ],
+      C: [
+        { substance: "A", quantity: 0.2 },
+        { substance: "D", quantity: 1 },
+      ],
+    };
+    const lab = new Laboratory(["A", "B", "C", "D"], reactions);
+    lab.setQuantity("B", 1);
+    lab.setQuantity("D", 1);
+    lab.setQuantity("A", 0.2);
+
+    // Avec 0.2 A, 1 B, 1 D en stock, on devrait pouvoir faire:
+    // - 1 C (consomme 0.2 A + 1 D)
+    // - 1 A (consomme 1 B + 1 C)
+    // Résultat net: 1 A en stock, 0 B, 0 C, 0 D
+    const produced = lab.make("A", 1);
+
+    expect(produced).toBe(1);
+    expect(lab.getQuantity("A")).toBe(1);
+    expect(lab.getQuantity("B")).toBe(0);
+    expect(lab.getQuantity("D")).toBe(0);
+  });
+
+  it("calcule correctement avec plusieurs niveaux de circularité", () => {
+    const reactions = {
+      A: [
+        { substance: "B", quantity: 1 },
+        { substance: "C", quantity: 1 },
+      ],
+      B: [
+        { substance: "A", quantity: 0.5 },
+        { substance: "E", quantity: 1 },
+      ],
+      C: [
+        { substance: "A", quantity: 0.2 },
+        { substance: "D", quantity: 1 },
+      ],
+    };
+    const lab = new Laboratory(["A", "B", "C", "D", "E"], reactions);
+    lab.setQuantity("A", 1);
+    lab.setQuantity("D", 10);
+    lab.setQuantity("E", 10);
+
+    const produced = lab.make("A", 5);
+
+    expect(produced).toBeGreaterThan(0);
+    expect(lab.getQuantity("A")).toBeGreaterThan(1);
+  });
+
+  it("retourne 0 si impossible de produire avec circularité", () => {
+    const reactions = {
+      A: [
+        { substance: "B", quantity: 1 },
+        { substance: "C", quantity: 1 },
+      ],
+      C: [
+        { substance: "A", quantity: 0.2 },
+        { substance: "D", quantity: 1 },
+      ],
+    };
+    const lab = new Laboratory(["A", "B", "C", "D"], reactions);
+    // Pas de stock initial - impossible de démarrer la circularité
+    lab.setQuantity("B", 0);
+    lab.setQuantity("D", 0);
+    lab.setQuantity("A", 0);
+
+    const produced = lab.make("A", 1);
+
+    expect(produced).toBe(0);
   });
 });
