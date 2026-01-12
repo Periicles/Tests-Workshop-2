@@ -128,20 +128,22 @@ export class Laboratory {
     if (visited.has(product)) {
       return true;
     }
-    
+
     if (!this.reactions[product]) {
       return false;
     }
-    
+
     visited.add(product);
     const reactants = this.reactions[product];
-    
+
     for (const reactant of reactants) {
-      if (this._detectCircularDependency(reactant.substance, new Set(visited))) {
+      if (
+        this._detectCircularDependency(reactant.substance, new Set(visited))
+      ) {
         return true;
       }
     }
-    
+
     return false;
   }
 
@@ -149,19 +151,25 @@ export class Laboratory {
     let totalProduced = 0;
     const maxIterations = 100;
     let iteration = 0;
-    
+
     while (totalProduced < desiredQuantity && iteration < maxIterations) {
       iteration++;
-      
-      const productionResult = this._attemptProduction(product, desiredQuantity - totalProduced);
-      
-      if (productionResult.produced === 0 && !productionResult.intermediatesProduced) {
+
+      const productionResult = this._attemptProduction(
+        product,
+        desiredQuantity - totalProduced
+      );
+
+      if (
+        productionResult.produced === 0 &&
+        !productionResult.intermediatesProduced
+      ) {
         break;
       }
-      
+
       totalProduced += productionResult.produced;
     }
-    
+
     return totalProduced;
   }
 
@@ -169,37 +177,44 @@ export class Laboratory {
     const reactants = this.reactions[product];
     let minBatchSize = Infinity;
     let intermediatesProduced = false;
-    
+
     for (const reactant of reactants) {
       const available = this.quantities[reactant.substance] || 0;
       const needed = reactant.quantity;
-      
+
       if (this._canProduceReactant(reactant.substance)) {
-        intermediatesProduced = this._produceIntermediateIfNeeded(
-          reactant.substance,
-          needed,
-          available
-        ) || intermediatesProduced;
+        intermediatesProduced =
+          this._produceIntermediateIfNeeded(
+            reactant.substance,
+            needed,
+            available
+          ) || intermediatesProduced;
       }
-      
+
       const nowAvailable = this.quantities[reactant.substance] || 0;
       const possibleBatches = Math.floor(nowAvailable / needed);
       minBatchSize = Math.min(minBatchSize, possibleBatches);
     }
-    
-    const produced = this._produceFinalBatches(product, minBatchSize, desiredQuantity);
-    
+
+    const produced = this._produceFinalBatches(
+      product,
+      minBatchSize,
+      desiredQuantity
+    );
+
     return { produced, intermediatesProduced };
   }
 
   _canProduceReactant(substance) {
-    return this.reactions[substance] && this._calculateMaxProducible(substance) > 0;
+    return (
+      this.reactions[substance] && this._calculateMaxProducible(substance) > 0
+    );
   }
 
   _produceIntermediateIfNeeded(substance, needed, available) {
     const canProduce = this._calculateMaxProducible(substance);
     const toProduce = Math.min(canProduce, Math.ceil(needed - available));
-    
+
     if (toProduce > 0) {
       this._consumeReactantsAndProduceProduct(substance, toProduce);
       return true;
@@ -211,12 +226,12 @@ export class Laboratory {
     if (minBatchSize === 0 || minBatchSize === Infinity) {
       return 0;
     }
-    
+
     const toProduce = Math.min(minBatchSize, desiredQuantity);
     if (toProduce > 0) {
       this._consumeReactantsAndProduceProduct(product, toProduce);
     }
-    
+
     return toProduce;
   }
 
@@ -274,7 +289,6 @@ export class Laboratory {
 
     // Check if there's a circular dependency
     const hasCircular = this._detectCircularDependency(product);
-    
     let produced;
     if (hasCircular) {
       produced = this._calculateMaxProducibleWithCircular(
@@ -286,7 +300,7 @@ export class Laboratory {
         desiredQuantity,
         this._calculateMaxProducible(product)
       );
-      
+
       if (maxPossible > 0) {
         this._consumeReactantsAndProduceProduct(product, maxPossible);
       }
