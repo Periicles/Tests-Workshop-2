@@ -63,3 +63,41 @@ describe("getQuantity - cas d'erreur", () => {
     expect(() => lab.getQuantity("")).toThrow();
   });
 });
+
+describe("Gestion des quantités", () => {
+  it("permet d'ajouter une quantité à une substance", () => {
+    const lab = new Laboratory(["H2O", "NaCl"]);
+    lab.addQuantity("H2O", 10.5);
+    expect(lab.getQuantity("H2O")).toBe(10.5);
+  });
+
+  it("permet d'ajouter une quantité supplémentaire à une substance existante", () => {
+    const lab = new Laboratory(["H2O", "NaCl"]);
+    lab.addQuantity("H2O", 10);
+    lab.addQuantity("H2O", 5);
+    expect(lab.getQuantity("H2O")).toBe(15);
+  });
+
+  it("permet de définir une quantité spécifique pour une substance", () => {
+    const lab = new Laboratory(["H2O", "NaCl"]);
+    lab.setQuantity("NaCl", 25.75);
+    expect(lab.getQuantity("NaCl")).toBe(25.75);
+  });
+
+  it("permet de remplacer une quantité existante avec setQuantity", () => {
+    const lab = new Laboratory(["H2O", "NaCl"]);
+    lab.setQuantity("H2O", 10);
+    lab.setQuantity("H2O", 20);
+    expect(lab.getQuantity("H2O")).toBe(20);
+  });
+
+  it("conserve les quantités indépendantes pour chaque substance", () => {
+    const lab = new Laboratory(["H2O", "NaCl", "CO2"]);
+    lab.addQuantity("H2O", 10);
+    lab.setQuantity("NaCl", 5);
+    lab.addQuantity("CO2", 7.5);
+    expect(lab.getQuantity("H2O")).toBe(10);
+    expect(lab.getQuantity("NaCl")).toBe(5);
+    expect(lab.getQuantity("CO2")).toBe(7.5);
+  });
+});
